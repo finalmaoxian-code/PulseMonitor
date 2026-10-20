@@ -1,0 +1,60 @@
+<!--
+    ============================================================================
+    MeterBarTheme.axaml —— 水平量程条
+
+    工业风做法：直角轨道 + 无圆角填充，填充色直接用信号色（不走渐变），
+    并在每 1/4 处保留刻度感的间距 —— 读起来像仪表面板上的量程指示。
+    ============================================================================
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:PulseMonitor.Controls">
+
+    <ControlTheme x:Key="{x:Type controls:MeterBar}" TargetType="controls:MeterBar">
+        <Setter Property="BarHeight" Value="6" />
+        <Setter Property="TrackBrush" Value="{DynamicResource BrushTrack}" />
+        <Setter Property="IndicatorBrush" Value="{DynamicResource BrushAccent}" />
+
+        <Setter Property="Template">
+            <ControlTemplate>
+                <!--
+                    用两列按比例分配宽度（* 与空列），完全交给布局系统计算，
+                    不需要在代码里量轨道宽度，也不会有过渡动画造成的读数滞后。
+                    PART_Indicator 的 Grid.Column 宽度由 MeterBar.cs 写入 ColumnDefinitions。
+                -->
+                <Border Name="PART_Track"
+                        Height="{TemplateBinding BarHeight}"
+                        CornerRadius="0"
+                        Background="{TemplateBinding TrackBrush}"
+                        ClipToBounds="True">
+                    <Grid Name="PART_Scale">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0*" />
+                            <ColumnDefinition Width="1*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Name="PART_Indicator"
+                                Grid.Column="0"
+                                CornerRadius="0"
+                                Background="{TemplateBinding IndicatorBrush}" />
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <!-- ===== 语义换色：直接用信号色，不用渐变 ===== -->
+        <Style Selector="^.calm">
+            <Setter Property="IndicatorBrush" Value="{DynamicResource BrushGreen}" />
+        </Style>
+        <Style Selector="^.normal">
+            <Setter Property="IndicatorBrush" Value="{DynamicResource BrushAccent}" />
+        </Style>
+        <Style Selector="^.high">
+            <Setter Property="IndicatorBrush" Value="{DynamicResource BrushAmber}" />
+        </Style>
+        <Style Selector="^.critical">
+            <Setter Property="IndicatorBrush" Value="{DynamicResource BrushRose}" />
+        </Style>
+    </ControlTheme>
+
+</ResourceDictionary>

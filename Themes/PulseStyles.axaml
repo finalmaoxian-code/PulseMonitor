@@ -1,0 +1,119 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        ========================================================================
+        PulseStyles.axaml —— 全局基础样式
+
+        视觉方向：仪表控制台。
+          · display：DIN 风格大号读数，数字对齐用等宽数字（tnum）；
+          · eyebrow：全大写、宽字距的小标签，像面板上的丝印；
+          · numeric：等宽字体，保证每列数字上下对齐；
+          · card / divider：只靠发丝线区分，不用投影与柔光。
+        ========================================================================
+    -->
+
+    <!-- ===== 文本层级 ===== -->
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+    </Style>
+
+    <!-- 大号读数：仪表铭牌 -->
+    <Style Selector="TextBlock.display">
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeDisplay}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <!-- 等宽数字：数值跳动时位数不左右抖动 -->
+        <Setter Property="FontFeatures" Value="tnum" />
+    </Style>
+
+    <Style Selector="TextBlock.title">
+        <Setter Property="FontFamily" Value="{DynamicResource DisplayFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeTitle}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LetterSpacing" Value="0.4" />
+    </Style>
+
+    <Style Selector="TextBlock.subtitle">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeSubtitle}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushTextSecondary}" />
+    </Style>
+
+    <Style Selector="TextBlock.body">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+    </Style>
+
+    <Style Selector="TextBlock.caption">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushTextMuted}" />
+    </Style>
+
+    <!-- 面板丝印：全大写 + 宽字距 -->
+    <Style Selector="TextBlock.eyebrow">
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeMicro}" />
+        <Setter Property="FontWeight" Value="Medium" />
+        <Setter Property="LetterSpacing" Value="{DynamicResource LetterSpacingLabel}" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushTextMuted}" />
+    </Style>
+
+    <!-- 表格数值：等宽字体 + 等宽数字，列与列严格对齐 -->
+    <Style Selector="TextBlock.numeric">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeBody}" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
+        <Setter Property="FontFeatures" Value="tnum" />
+    </Style>
+
+    <!-- 编号 / 时间戳 -->
+    <Style Selector="TextBlock.mono">
+        <Setter Property="FontFamily" Value="{DynamicResource MonoFontFamily}" />
+        <Setter Property="FontSize" Value="{DynamicResource FontSizeCaption}" />
+        <Setter Property="Foreground" Value="{DynamicResource BrushTextMuted}" />
+        <Setter Property="FontFeatures" Value="tnum" />
+    </Style>
+
+    <!-- ===== 面板容器 ===== -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource BrushSurface}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BrushBorder}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Padding" Value="{DynamicResource SpacingCard}" />
+    </Style>
+
+    <Style Selector="Border.card:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource BrushBorderStrong}" />
+    </Style>
+
+    <!-- 次级表面（面板里的内嵌区块） -->
+    <Style Selector="Border.surface">
+        <Setter Property="Background" Value="{DynamicResource BrushSurfaceAlt}" />
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+
+    <!-- 分隔线 -->
+    <Style Selector="Rectangle.divider">
+        <Setter Property="Height" Value="1" />
+        <Setter Property="Fill" Value="{DynamicResource BrushBorder}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- ===== 方形指示灯（取代圆形色点） ===== -->
+    <Style Selector="Ellipse.dot">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style Selector="Rectangle.led">
+        <Setter Property="Width" Value="6" />
+        <Setter Property="Height" Value="6" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+</Styles>

@@ -1,0 +1,46 @@
+<!--
+    ============================================================================
+    App.axaml —— 应用级资源与样式装配中心
+    设计思路（体现 Avalonia 组件特性）：
+    · 这里只做"装配"，不放任何具体界面。
+    · ResourceDictionary.MergedDictionaries 负责合并：
+        - Themes/PulseTokens.axaml   尺寸 / 字号 / 动效时长等设计令牌
+        - Themes/PulsePalette.axaml  明暗双主题色板（ThemeDictionaries）
+        - Themes/Controls/*.axaml    每个自定义控件的 ControlTheme
+    · Application.Styles 里挂 FluentTheme + 自定义样式表（PulseStyles.axaml）。
+    · RequestedThemeVariant="Dark" 是启动时的默认主题；窗口顶栏的主题开关会改
+      Application.RequestedThemeVariant，色板里的 ThemeDictionaries
+      随之切换到 Light 那一套，所有 {DynamicResource ...} 引用即时更新。
+    ============================================================================
+-->
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PulseMonitor.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 设计令牌（尺寸 / 字号 / 动效） -->
+                <ResourceInclude Source="avares://PulseMonitor/Themes/PulseTokens.axaml" />
+                <!-- 色板（含 Dark / Light 两套） -->
+                <ResourceInclude Source="avares://PulseMonitor/Themes/PulsePalette.axaml" />
+                <!-- 自定义控件的 ControlTheme（一个组件一个文件） -->
+                <ResourceInclude Source="avares://PulseMonitor/Themes/Controls/MetricCardTheme.axaml" />
+                <ResourceInclude Source="avares://PulseMonitor/Themes/Controls/MeterBarTheme.axaml" />
+                <ResourceInclude Source="avares://PulseMonitor/Themes/Controls/StatusPillTheme.axaml" />
+                <ResourceInclude Source="avares://PulseMonitor/Themes/Controls/NavItemTheme.axaml" />
+                <ResourceInclude Source="avares://PulseMonitor/Themes/Controls/SectionCardTheme.axaml" />
+                <!-- 共享数据模板（进程行等），供各页面 {StaticResource ...} 引用 -->
+                <ResourceInclude Source="avares://PulseMonitor/Themes/DataTemplates.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+
+    <Application.Styles>
+        <!-- Fluent 基础主题 -->
+        <FluentTheme />
+        <!-- 项目自身的类样式（文字层级、卡片、分隔线等） -->
+        <StyleInclude Source="avares://PulseMonitor/Themes/PulseStyles.axaml" />
+    </Application.Styles>
+</Application>

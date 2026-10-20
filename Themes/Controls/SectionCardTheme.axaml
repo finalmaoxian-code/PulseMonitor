@@ -1,0 +1,83 @@
+<!--
+    ============================================================================
+    SectionCardTheme.axaml —— 分区面板
+
+    标题行模拟仪表盘的面板铭牌：
+        [▪] 实时负载                      SYS / 01        实测间隔 1.0 秒
+        ──────────────────────────────────────────────────────────────
+        内容
+    ============================================================================
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:PulseMonitor.Controls">
+
+    <ControlTheme x:Key="{x:Type controls:SectionCard}" TargetType="controls:SectionCard">
+        <Setter Property="AccentBrush" Value="{DynamicResource BrushAccent}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="PART_Root"
+                        Background="{DynamicResource BrushSurface}"
+                        BorderBrush="{DynamicResource BrushBorder}"
+                        BorderThickness="1"
+                        CornerRadius="0"
+                        Padding="18,15"
+                        ClipToBounds="True">
+                    <Grid RowDefinitions="Auto,Auto,*">
+
+                        <!-- ===== 铭牌行 ===== -->
+                        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                            <!-- 方形指示灯 -->
+                            <Rectangle Width="6" Height="6"
+                                       VerticalAlignment="Center"
+                                       Fill="{TemplateBinding AccentBrush}" />
+
+                            <TextBlock Grid.Column="1"
+                                       Margin="10,0,0,0"
+                                       Text="{TemplateBinding Header}"
+                                       FontSize="{DynamicResource FontSizeSubtitle}"
+                                       FontWeight="SemiBold"
+                                       LetterSpacing="0.6"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource BrushText}" />
+
+                            <!-- 面板代号 -->
+                            <TextBlock Grid.Column="3"
+                                       Classes="mono"
+                                       Margin="0,0,14,0"
+                                       VerticalAlignment="Center"
+                                       Text="{TemplateBinding Code}" />
+
+                            <TextBlock Grid.Column="4"
+                                       Text="{TemplateBinding Hint}"
+                                       Classes="mono"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+
+                        <!-- ===== 发丝分隔线 ===== -->
+                        <Rectangle Grid.Row="1"
+                                   Height="1"
+                                   Margin="0,10,0,0"
+                                   Fill="{DynamicResource BrushBorder}" />
+
+                        <ContentPresenter Grid.Row="2"
+                                          Name="PART_ContentPresenter"
+                                          Margin="0,12,0,0"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^:pointerover /template/ Border#PART_Root">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrushBorderStrong}" />
+        </Style>
+    </ControlTheme>
+
+</ResourceDictionary>

@@ -1,0 +1,155 @@
+<!--
+    ============================================================================
+    PulsePalette.axaml —— 全局调色板（颜色 / 画刷 / 字体）
+
+    视觉方向：仪表控制台（Instrument Console）。
+      · 石墨色底 + 冷灰文字，不用蓝紫渐变；
+      · 颜色只承担「信号」职责：青（系统）/ 绿（正常）/ 琥珀（偏高）/ 朱红（过载）；
+      · 表面之间靠 1px 发丝线分隔，不靠投影和圆角；
+      · 明暗两套用同一套语义键，切换主题时所有 DynamicResource 即时更新。
+    ============================================================================
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ===== 字体角色（与主题无关） =====
+         display：DIN 风格仪表铭牌，只用在大号读数与标题；
+         body   ：正文与中文，保持中性无衬线；
+         mono   ：数据、时间戳、编号，等宽才对齐。 -->
+    <FontFamily x:Key="AppFontFamily">Inter, Microsoft YaHei UI, Segoe UI, sans-serif</FontFamily>
+    <FontFamily x:Key="DisplayFontFamily">Bahnschrift, Segoe UI, Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="MonoFontFamily">Cascadia Mono, Consolas, Microsoft YaHei UI, Segoe UI</FontFamily>
+
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ====================================================================
+             深色（默认）：近乎无彩的石墨灰，只有信号色带一点彩度
+             ==================================================================== -->
+        <ResourceDictionary x:Key="Dark">
+
+            <!-- ===== 底层 ===== -->
+            <SolidColorBrush x:Key="BrushWindowBackground" Color="#0A0B0C" />
+            <SolidColorBrush x:Key="BrushSidebar" Color="#0C0E10" />
+
+            <!-- ===== 表面：面板 / 内嵌区 / 悬停 ===== -->
+            <SolidColorBrush x:Key="BrushSurface" Color="#121417" />
+            <SolidColorBrush x:Key="BrushSurfaceAlt" Color="#0E1013" />
+            <SolidColorBrush x:Key="BrushSurfaceHover" Color="#191D22" />
+
+            <!-- ===== 发丝线 ===== -->
+            <SolidColorBrush x:Key="BrushBorder" Color="#24282E" />
+            <SolidColorBrush x:Key="BrushBorderStrong" Color="#3A4048" />
+
+            <!-- ===== 文本 ===== -->
+            <SolidColorBrush x:Key="BrushText" Color="#DCE0E4" />
+            <SolidColorBrush x:Key="BrushTextSecondary" Color="#8E969E" />
+            <SolidColorBrush x:Key="BrushTextMuted" Color="#5B636B" />
+
+            <!-- ===== 信号色 ===== -->
+            <SolidColorBrush x:Key="BrushAccent" Color="#63C9D8" />
+            <SolidColorBrush x:Key="BrushAccentSoft" Color="#8FDCE6" />
+            <SolidColorBrush x:Key="BrushCyan" Color="#63C9D8" />
+            <SolidColorBrush x:Key="BrushGreen" Color="#5FCFA0" />
+            <SolidColorBrush x:Key="BrushAmber" Color="#D9A93F" />
+            <SolidColorBrush x:Key="BrushRose" Color="#D9695F" />
+
+            <!-- ===== 轨道 / 网格 ===== -->
+            <SolidColorBrush x:Key="BrushTrack" Color="#1E242A" />
+            <SolidColorBrush x:Key="BrushGaugeTrack" Color="#333B43" />
+            <SolidColorBrush x:Key="BrushGridLine" Color="#20262C" />
+            <SolidColorBrush x:Key="BrushGridLineStrong" Color="#2E353C" />
+
+            <!-- ===== 兼容键：工业风不使用渐变与光晕，这里退化为近纯色 ===== -->
+            <LinearGradientBrush x:Key="BrushGradientAccent" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#63C9D8" />
+                <GradientStop Offset="1" Color="#4FB6C4" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushGradientGreen" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#5FCFA0" />
+                <GradientStop Offset="1" Color="#4CB98C" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushGradientAmber" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#D9A93F" />
+                <GradientStop Offset="1" Color="#C4952F" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushGradientRose" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#D9695F" />
+                <GradientStop Offset="1" Color="#C4554C" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushCardGlow" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Offset="0" Color="#00000000" />
+                <GradientStop Offset="1" Color="#00000000" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="BrushGlowAccent" Color="#00000000" />
+            <SolidColorBrush x:Key="BrushGlowCyan" Color="#00000000" />
+            <SolidColorBrush x:Key="BrushBackdropGlow" Color="#00000000" />
+        </ResourceDictionary>
+
+        <!-- ====================================================================
+             浅色：冷灰「图纸」底，同样的发丝线与信号色逻辑
+             ==================================================================== -->
+        <ResourceDictionary x:Key="Light">
+
+            <SolidColorBrush x:Key="BrushWindowBackground" Color="#E6E9EB" />
+            <SolidColorBrush x:Key="BrushSidebar" Color="#EFF1F2" />
+
+            <SolidColorBrush x:Key="BrushSurface" Color="#FAFBFB" />
+            <SolidColorBrush x:Key="BrushSurfaceAlt" Color="#F1F3F4" />
+            <SolidColorBrush x:Key="BrushSurfaceHover" Color="#E3E7E9" />
+
+            <SolidColorBrush x:Key="BrushBorder" Color="#D3D8DB" />
+            <SolidColorBrush x:Key="BrushBorderStrong" Color="#AEB6BB" />
+
+            <SolidColorBrush x:Key="BrushText" Color="#15181B" />
+            <SolidColorBrush x:Key="BrushTextSecondary" Color="#586069" />
+            <SolidColorBrush x:Key="BrushTextMuted" Color="#858D94" />
+
+            <SolidColorBrush x:Key="BrushAccent" Color="#12707E" />
+            <SolidColorBrush x:Key="BrushAccentSoft" Color="#1A8C9C" />
+            <SolidColorBrush x:Key="BrushCyan" Color="#12707E" />
+            <SolidColorBrush x:Key="BrushGreen" Color="#1F7A5A" />
+            <SolidColorBrush x:Key="BrushAmber" Color="#94660F" />
+            <SolidColorBrush x:Key="BrushRose" Color="#A83B33" />
+
+            <SolidColorBrush x:Key="BrushTrack" Color="#DDE2E5" />
+            <SolidColorBrush x:Key="BrushGaugeTrack" Color="#C3CACF" />
+            <SolidColorBrush x:Key="BrushGridLine" Color="#DDE2E5" />
+            <SolidColorBrush x:Key="BrushGridLineStrong" Color="#C8D0D5" />
+
+            <LinearGradientBrush x:Key="BrushGradientAccent" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#12707E" />
+                <GradientStop Offset="1" Color="#0F5F6B" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushGradientGreen" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#1F7A5A" />
+                <GradientStop Offset="1" Color="#19674C" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushGradientAmber" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#94660F" />
+                <GradientStop Offset="1" Color="#7D560C" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushGradientRose" StartPoint="0%,0%" EndPoint="100%,0%">
+                <GradientStop Offset="0" Color="#A83B33" />
+                <GradientStop Offset="1" Color="#8E302A" />
+            </LinearGradientBrush>
+
+            <LinearGradientBrush x:Key="BrushCardGlow" StartPoint="0%,0%" EndPoint="0%,100%">
+                <GradientStop Offset="0" Color="#00000000" />
+                <GradientStop Offset="1" Color="#00000000" />
+            </LinearGradientBrush>
+
+            <SolidColorBrush x:Key="BrushGlowAccent" Color="#00000000" />
+            <SolidColorBrush x:Key="BrushGlowCyan" Color="#00000000" />
+            <SolidColorBrush x:Key="BrushBackdropGlow" Color="#00000000" />
+        </ResourceDictionary>
+
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

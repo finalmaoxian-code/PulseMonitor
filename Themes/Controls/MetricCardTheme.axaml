@@ -1,0 +1,98 @@
+<!--
+    ============================================================================
+    MetricCardTheme.axaml —— 指标卡（仪表面板）
+
+    结构：
+        ┌─ 2px 强调色边条（左侧，像面板上的色标）
+        │  LABEL ──────────────────  序号
+        │  18.7  %
+        │  [ 内容：曲线 / 状态 ]
+        │  说明文字
+    没有圆角、没有投影、没有顶部高光条 —— 只靠 1px 边框和色标建立层级。
+    ============================================================================
+-->
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="using:PulseMonitor.Controls">
+
+    <ControlTheme x:Key="{x:Type controls:MetricCard}" TargetType="controls:MetricCard">
+        <Setter Property="AccentBrush" Value="{DynamicResource BrushAccent}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="PART_Root"
+                        Background="{DynamicResource BrushSurface}"
+                        BorderBrush="{DynamicResource BrushBorder}"
+                        BorderThickness="1"
+                        CornerRadius="0"
+                        ClipToBounds="True">
+                    <Grid ColumnDefinitions="2,*">
+
+                        <!-- ===== 左侧色标：唯一有颜色的装饰，承担通道识别 ===== -->
+                        <Border Grid.Column="0"
+                                Background="{TemplateBinding AccentBrush}" />
+
+                        <Grid Grid.Column="1"
+                              RowDefinitions="Auto,Auto,*,Auto"
+                              Margin="16,13,16,13">
+
+                            <!-- 第一行：丝印标签 + 右侧序号 -->
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <TextBlock Classes="eyebrow"
+                                           VerticalAlignment="Center"
+                                           Text="{TemplateBinding Label}"
+                                           Foreground="{TemplateBinding AccentBrush}" />
+
+                                <TextBlock Grid.Column="2"
+                                           Classes="mono"
+                                           VerticalAlignment="Center"
+                                           Text="{TemplateBinding Code}" />
+                            </Grid>
+
+                            <!-- 第二行：主读数 + 单位 -->
+                            <StackPanel Grid.Row="1"
+                                        Orientation="Horizontal"
+                                        Spacing="6"
+                                        Margin="0,6,0,0">
+                                <TextBlock Classes="display"
+                                           FontSize="36"
+                                           Text="{TemplateBinding Value}"
+                                           Foreground="{DynamicResource BrushText}" />
+                                <TextBlock Text="{TemplateBinding Unit}"
+                                           FontSize="{DynamicResource FontSizeSubtitle}"
+                                           FontWeight="Medium"
+                                           Foreground="{DynamicResource BrushTextMuted}"
+                                           VerticalAlignment="Bottom"
+                                           Margin="0,0,0,6" />
+                            </StackPanel>
+
+                            <!-- 第三行：自定义内容（曲线 / 状态） -->
+                            <ContentPresenter Grid.Row="2"
+                                              Name="PART_ContentPresenter"
+                                              Margin="0,9,0,0"
+                                              Content="{TemplateBinding Content}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"
+                                              HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" />
+
+                            <!-- 第四行：说明 -->
+                            <TextBlock Grid.Row="3"
+                                       Classes="caption"
+                                       Margin="0,8,0,0"
+                                       TextTrimming="CharacterEllipsis"
+                                       Text="{TemplateBinding Caption}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <!-- 悬停：边框提亮一档，不做位移与发光 -->
+        <Style Selector="^:pointerover /template/ Border#PART_Root">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrushBorderStrong}" />
+        </Style>
+    </ControlTheme>
+
+</ResourceDictionary>

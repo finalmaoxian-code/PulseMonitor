@@ -1,0 +1,188 @@
+<!--
+    ============================================================================
+    NetworkPage.axaml —— 网络流量（NET / 02）
+
+    版式：
+        第一行  上下行读数（带趋势和状态）
+        第二行  速率曲线（双通道同屏对比）
+        第三行  网卡明细（表格式，发丝线分栏）
+        第四行  流量汇总
+    ============================================================================
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:PulseMonitor.Controls"
+             xmlns:vm="using:PulseMonitor.ViewModels"
+             x:Class="PulseMonitor.Views.NetworkPage"
+             x:DataType="vm:DashboardViewModel">
+
+    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="9">
+
+            <!-- ===================== 上下行读数 ===================== -->
+            <UniformGrid Columns="2">
+                <controls:MetricCard Label="DOWNLOAD"
+                                     Code="NET-01"
+                                     Value="{Binding DownloadRateValueText}"
+                                     Unit="{Binding DownloadRateUnitText}"
+                                     Caption="{Binding TotalDownloadedText, StringFormat='SESSION {0}'}"
+                                     AccentBrush="{DynamicResource BrushGreen}"
+                                     Margin="0,0,4,0">
+                    <StackPanel Spacing="6">
+                        <controls:TrendChart Height="34"
+                                             AutoScale="True"
+                                             MaxSamples="60"
+                                             Values="{Binding DownloadHistory.Values}"
+                                             LineBrush="{DynamicResource BrushGreen}"
+                                             GridBrush="{DynamicResource BrushGridLine}" />
+                        <controls:StatusPill HorizontalAlignment="Left"
+                                             Text="{Binding DownloadStatusText}"
+                                             AccentBrush="{DynamicResource BrushGreen}" />
+                    </StackPanel>
+                </controls:MetricCard>
+
+                <controls:MetricCard Label="UPLOAD"
+                                     Code="NET-02"
+                                     Value="{Binding UploadRateValueText}"
+                                     Unit="{Binding UploadRateUnitText}"
+                                     Caption="{Binding TotalUploadedText, StringFormat='SESSION {0}'}"
+                                     AccentBrush="{DynamicResource BrushAmber}"
+                                     Margin="4,0,0,0">
+                    <StackPanel Spacing="6">
+                        <controls:TrendChart Height="34"
+                                             AutoScale="True"
+                                             MaxSamples="60"
+                                             Values="{Binding UploadHistory.Values}"
+                                             LineBrush="{DynamicResource BrushAmber}"
+                                             GridBrush="{DynamicResource BrushGridLine}" />
+                        <controls:StatusPill HorizontalAlignment="Left"
+                                             Text="{Binding UploadStatusText}"
+                                             AccentBrush="{DynamicResource BrushAmber}" />
+                    </StackPanel>
+                </controls:MetricCard>
+            </UniformGrid>
+
+            <!-- ===================== 速率曲线 ===================== -->
+            <controls:SectionCard Header="速率曲线"
+                                  Code="MB/s"
+                                  Hint="{Binding SamplingIntervalText, StringFormat='Δ {0}'}"
+                                  AccentBrush="{DynamicResource BrushGreen}">
+                <Grid RowDefinitions="Auto,*,Auto,*" RowSpacing="6">
+                    <StackPanel Orientation="Horizontal" Spacing="18">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <Rectangle Classes="led" Fill="{DynamicResource BrushGreen}" />
+                            <TextBlock Text="DOWNLOAD" Classes="eyebrow" />
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <Rectangle Classes="led" Fill="{DynamicResource BrushAmber}" />
+                            <TextBlock Text="UPLOAD" Classes="eyebrow" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <controls:TrendChart Grid.Row="1"
+                                         Height="44"
+                                         AutoScale="True"
+                                         Values="{Binding DownloadHistory.Values}"
+                                         LineBrush="{DynamicResource BrushGreen}"
+                                         GridBrush="{DynamicResource BrushGridLine}" />
+
+                    <controls:TrendChart Grid.Row="3"
+                                         Height="30"
+                                         AutoScale="True"
+                                         Values="{Binding UploadHistory.Values}"
+                                         LineBrush="{DynamicResource BrushAmber}"
+                                         GridBrush="{DynamicResource BrushGridLine}" />
+                </Grid>
+            </controls:SectionCard>
+
+            <!-- ===================== 网卡明细 ===================== -->
+            <controls:SectionCard Header="网卡明细"
+                                  Code="NIC"
+                                  Hint="{Binding NetworkSummaryText}"
+                                  AccentBrush="{DynamicResource BrushCyan}">
+                <Grid RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8" MaxHeight="196">
+                    <Grid ColumnDefinitions="*,130,130,82,14">
+                        <TextBlock Text="ADAPTER" Classes="eyebrow" />
+                        <TextBlock Grid.Column="1" Text="DOWN" Classes="eyebrow" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="2" Text="UP" Classes="eyebrow" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="3" Text="SCOPE" Classes="eyebrow" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Rectangle Grid.Row="1" Height="1" Fill="{DynamicResource BrushBorder}" />
+
+                    <ScrollViewer Grid.Row="2"
+                                  ClipToBounds="True"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding NetworkAdapters}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:NetworkAdapterViewModel">
+                                <Border Padding="0,7"
+                                        BorderBrush="{DynamicResource BrushBorder}"
+                                        BorderThickness="0,0,0,1"
+                                        ToolTip.Tip="{Binding Tooltip}">
+                                    <Grid ColumnDefinitions="*,130,130,82,14">
+                                        <StackPanel Grid.Column="0" Spacing="3">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontSize="{DynamicResource FontSizeBody}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding DetailText}"
+                                                       Classes="mono"
+                                                       FontSize="10"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </StackPanel>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding DownloadText}"
+                                                   Classes="numeric"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding UploadText}"
+                                                   Classes="numeric"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="3"
+                                                   Text="{Binding AggregateText}"
+                                                   Classes="mono"
+                                                   HorizontalAlignment="Right"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- 汇总读数：与明细同面板，避免多一张卡片占用纵向空间 -->
+                    <Grid Grid.Row="3" ColumnDefinitions="*,*,*" Margin="0,6,0,0" MinHeight="18">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Text="SESSION DOWN" Classes="eyebrow" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TotalDownloadedText}"
+                                       Classes="numeric"
+                                       HorizontalAlignment="Right" />
+                        </Grid>
+                        <Grid Grid.Column="1" ColumnDefinitions="Auto,*" Margin="18,0,0,0">
+                            <TextBlock Text="SESSION UP" Classes="eyebrow" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TotalUploadedText}"
+                                       Classes="numeric"
+                                       HorizontalAlignment="Right" />
+                        </Grid>
+                        <Grid Grid.Column="2" ColumnDefinitions="Auto,*" Margin="18,0,0,0">
+                            <TextBlock Text="LAST" Classes="eyebrow" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding UpdatedAtText}"
+                                       Classes="numeric"
+                                       HorizontalAlignment="Right" />
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </controls:SectionCard>
+
+            <!-- ===================== 流量汇总（并入网卡面板底部的一行读数） ===================== -->
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -1,0 +1,96 @@
+<!--
+    ============================================================================
+    SidebarView.axaml —— 侧边栏（通道选择器）
+
+    顶部通道标题、中部三个 NavItem、底部采样遥测。
+    所有分隔都用发丝线，不用圆角卡片。
+    ============================================================================
+-->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="using:PulseMonitor.Controls"
+             xmlns:vm="using:PulseMonitor.ViewModels"
+             x:Class="PulseMonitor.Views.SidebarView"
+             x:DataType="vm:ShellViewModel">
+
+    <Border Background="{DynamicResource BrushSidebar}"
+            BorderBrush="{DynamicResource BrushBorder}"
+            BorderThickness="0,0,1,0">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+            <!-- ===================== 通道标题 ===================== -->
+            <StackPanel Grid.Row="0" Margin="18,18,18,0" Spacing="6">
+                <TextBlock Text="CHANNELS" Classes="eyebrow" />
+                <Rectangle Height="1" Fill="{DynamicResource BrushBorder}" />
+            </StackPanel>
+
+            <!-- ===================== 导航 ===================== -->
+            <ListBox Grid.Row="1"
+                     Margin="6,10,6,0"
+                     VerticalAlignment="Top"
+                     Background="Transparent"
+                     BorderThickness="0"
+                     Padding="0"
+                     SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}">
+                <controls:NavItem Code="01" Glyph="&#xE80F;" Text="总览" Subtitle="CPU / 内存 / 磁盘" />
+                <controls:NavItem Code="02" Glyph="&#xE774;" Text="网络" Subtitle="上下行速率与流量" />
+                <controls:NavItem Code="03" Glyph="&#xE7C4;" Text="进程" Subtitle="占用排行" />
+            </ListBox>
+
+            <!-- ===================== 中部：会话读数 ===================== -->
+            <StackPanel Grid.Row="2" Margin="18,24,18,0" Spacing="10">
+                <TextBlock Text="SESSION" Classes="eyebrow" />
+                <Rectangle Height="1" Fill="{DynamicResource BrushBorder}" />
+
+                <StackPanel Spacing="8" Margin="0,2,0,0">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="DOWN" Classes="eyebrow" />
+                        <TextBlock Text="{Binding Dashboard.TotalDownloadedText}" Classes="numeric" FontSize="15" />
+                    </StackPanel>
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="UP" Classes="eyebrow" />
+                        <TextBlock Text="{Binding Dashboard.TotalUploadedText}" Classes="numeric" FontSize="15" />
+                    </StackPanel>
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="PROCESSES" Classes="eyebrow" />
+                        <TextBlock Text="{Binding Dashboard.ProcessCountText}" Classes="numeric" FontSize="15" />
+                    </StackPanel>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ===================== 底部遥测 ===================== -->
+            <StackPanel Grid.Row="4" Margin="18,0,18,18" Spacing="10">
+
+                <Rectangle Height="1" Fill="{DynamicResource BrushBorder}" />
+
+                <StackPanel Spacing="5">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="SAMPLING" Classes="eyebrow" />
+                        <TextBlock Grid.Column="1" Text="1 Hz" Classes="mono" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="PROCESS" Classes="eyebrow" />
+                        <TextBlock Grid.Column="1" Text="0.5 Hz" Classes="mono" />
+                    </Grid>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Text="INTERVAL" Classes="eyebrow" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding Dashboard.SamplingIntervalText}"
+                                   Classes="mono" />
+                    </Grid>
+                </StackPanel>
+
+                <Rectangle Height="1" Fill="{DynamicResource BrushBorder}" />
+
+                <StackPanel Orientation="Horizontal" Spacing="7">
+                    <Rectangle Classes="led" Fill="{DynamicResource BrushGreen}" />
+                    <TextBlock Text="LIVE"
+                               Classes="mono"
+                               FontSize="9"
+                               LetterSpacing="1.4"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>
