@@ -207,14 +207,19 @@ public sealed class CpuUsageSampler
         public readonly ulong ToUInt64() => ((ulong)High << 32) | Low;
     }
 
+    /// <summary>
+    /// Windows 原生 GROUP_AFFINITY 的字段顺序是 Mask 在前、Group 在后，
+    /// 最后是三个 Reserved。顺序写错在单处理器组机器上不会暴露，
+    /// 但会破坏 > 64 逻辑核机器的处理器组切换。
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct GroupAffinity
     {
+        public UIntPtr Mask;
         public ushort Group;
         public ushort Reserved0;
         public ushort Reserved1;
         public ushort Reserved2;
-        public UIntPtr Mask;
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]

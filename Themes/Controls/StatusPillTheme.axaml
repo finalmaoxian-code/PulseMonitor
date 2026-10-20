@@ -60,6 +60,14 @@
             <Setter Property="AccentBrush" Value="{DynamicResource BrushRose}" />
         </Style>
 
+        <!-- 无有效读数时指示灯变暗（静态样式，不引入动画） -->
+        <Style Selector="^[IsLive=False] /template/ Rectangle#Halo">
+            <Setter Property="Opacity" Value="0.16" />
+        </Style>
+        <Style Selector="^[IsLive=False]">
+            <Setter Property="Opacity" Value="0.72" />
+        </Style>
+
         <!-- Pulse=True 时指示灯呼吸 -->
         <Style Selector="^[Pulse=True] /template/ Rectangle#Halo">
             <Style.Animations>

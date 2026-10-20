@@ -66,6 +66,13 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
     private string _diskStatusText = "等待采样";
     private bool _diskIsLive;
 
+    private string _diskReadRateText = "--";
+    private string _diskWriteRateText = "--";
+    private string _diskReadsIopsText = "--";
+    private string _diskWritesIopsText = "--";
+    private string _diskIoStatusText = "等待采样";
+    private bool _diskIoIsLive;
+
     private string _downloadRateText = "N/A";
     private string _uploadRateText = "N/A";
     private string _downloadRateValueText = "--";
@@ -104,6 +111,10 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
     public MetricHistory DownloadHistory { get; } = new(HistoryCapacity, HistoryWindow);
 
     public MetricHistory UploadHistory { get; } = new(HistoryCapacity, HistoryWindow);
+
+    public MetricHistory DiskReadHistory { get; } = new(HistoryCapacity, HistoryWindow);
+
+    public MetricHistory DiskWriteHistory { get; } = new(HistoryCapacity, HistoryWindow);
 
     public double CpuPercent
     {
@@ -229,6 +240,42 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
     {
         get => _diskIsLive;
         private set => SetField(ref _diskIsLive, value);
+    }
+
+    public string DiskReadRateText
+    {
+        get => _diskReadRateText;
+        private set => SetField(ref _diskReadRateText, value);
+    }
+
+    public string DiskWriteRateText
+    {
+        get => _diskWriteRateText;
+        private set => SetField(ref _diskWriteRateText, value);
+    }
+
+    public string DiskReadsIopsText
+    {
+        get => _diskReadsIopsText;
+        private set => SetField(ref _diskReadsIopsText, value);
+    }
+
+    public string DiskWritesIopsText
+    {
+        get => _diskWritesIopsText;
+        private set => SetField(ref _diskWritesIopsText, value);
+    }
+
+    public string DiskIoStatusText
+    {
+        get => _diskIoStatusText;
+        private set => SetField(ref _diskIoStatusText, value);
+    }
+
+    public bool DiskIoIsLive
+    {
+        get => _diskIoIsLive;
+        private set => SetField(ref _diskIoIsLive, value);
     }
 
     public string DownloadRateText
@@ -481,6 +528,7 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
         ApplyCpu(snapshot.CpuUsagePercent);
         ApplyMemory(snapshot.Memory);
         ApplyDisk(snapshot.SystemDisk);
+        ApplyDiskIo(snapshot.DiskIo);
         ApplyNetwork(snapshot.Network);
         UpdateDataQuality(snapshot);
 
@@ -563,6 +611,55 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
         DiskIsLive = false;
     }
 
+    /// <summary>
+    /// 磁盘实时 I/O。四项指标各自独立判断：
+    /// 某项不可用时只让该项显示状态文案，不会把其它项也一并作废。
+    /// </summary>
+    private void ApplyDiskIo(DiskIoSnapshot snapshot)
+    {
+        DiskReadRateText = FormatRateOrStatus(snapshot.ReadBytesPerSecond, "磁盘读取速度");
+        DiskWriteRateText = FormatRateOrStatus(snapshot.WriteBytesPerSecond, "磁盘写入速度");
+        DiskReadsIopsText = FormatIopsOrStatus(snapshot.ReadsPerSecond);
+        DiskWritesIopsText = FormatIopsOrStatus(snapshot.WritesPerSecond);
+
+        bool anyValid =
+            snapshot.ReadBytesPerSecond.Status == SampleStatus.Valid ||
+            snapshot.WriteBytesPerSecond.Status == SampleStatus.Valid ||
+            snapshot.ReadsPerSecond.Status == SampleStatus.Valid ||
+            snapshot.WritesPerSecond.Status == SampleStatus.Valid;
+
+        bool allValid =
+            snapshot.ReadBytesPerSecond.Status == SampleStatus.Valid &&
+            snapshot.WriteBytesPerSecond.Status == SampleStatus.Valid &&
+            snapshot.ReadsPerSecond.Status == SampleStatus.Valid &&
+            snapshot.WritesPerSecond.Status == SampleStatus.Valid;
+
+        DiskIoIsLive = allValid;
+        DiskIoStatusText = allValid
+            ? LoadScale.Describe(LoadKind.Calm)
+            : anyValid ? "部分采样" : snapshot.ReadBytesPerSecond.Status.ToShortText();
+
+        if (snapshot.ReadBytesPerSecond.Status == SampleStatus.Valid)
+        {
+            DiskReadHistory.Push(snapshot.Timestamp, snapshot.ReadBytesPerSecond.Value / 1024d / 1024d);
+        }
+
+        if (snapshot.WriteBytesPerSecond.Status == SampleStatus.Valid)
+        {
+            DiskWriteHistory.Push(snapshot.Timestamp, snapshot.WriteBytesPerSecond.Value / 1024d / 1024d);
+        }
+    }
+
+    private static string FormatRateOrStatus(MetricSample<double> sample, string label) =>
+        sample.Status == SampleStatus.Valid
+            ? Formatters.Rate(sample.Value)
+            : DescribeUnavailableStatus(sample.Status, sample.Error ?? $"{label}不可用");
+
+    private static string FormatIopsOrStatus(MetricSample<double> sample) =>
+        sample.Status == SampleStatus.Valid
+            ? $"{sample.Value:0.0} IOPS"
+            : DescribeUnavailableStatus(sample.Status, sample.Error ?? "IOPS 不可用");
+
     private void ApplyNetwork(NetworkSnapshot sample)
     {
         ApplyRateSample(
@@ -591,9 +688,18 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
 
         int included = sample.Adapters.Count(adapter => adapter.IsIncludedInAggregate);
         int excluded = sample.Adapters.Count - included;
+
+        // 汇总里有网卡没交出有效读数时，明确标注这是部分统计，
+        // 避免把不完整的合计当成整机精确流量。
+        int downloadMissing = Math.Max(0, included - sample.DownloadContributingCount);
+        int uploadMissing = Math.Max(0, included - sample.UploadContributingCount);
+        int missing = Math.Max(downloadMissing, uploadMissing);
+
         NetworkSummaryText = sample.Adapters.Count == 0
             ? "没有活动网络适配器"
-            : $"计入 {included} 块网卡 · 排除 {excluded} 块虚拟/VPN 网卡";
+            : missing > 0
+                ? $"计入 {included} 块 · 排除 {excluded} 块 · {missing} 块采样未就绪（部分统计）"
+                : $"计入 {included} 块 · 排除 {excluded} 块虚拟/VPN 网卡";
     }
 
     private void ApplyRateSample(
@@ -628,7 +734,7 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
     private void UpdateDataQuality(SystemSnapshot snapshot)
     {
         int valid = 0;
-        const int total = 4;
+        const int total = 5;
 
         if (snapshot.CpuUsagePercent.Status == SampleStatus.Valid)
         {
@@ -651,9 +757,15 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
             valid++;
         }
 
-        DataQualityText = valid == total
-            ? "4 / 4 项核心指标有效"
-            : $"{valid} / {total} 项核心指标有效";
+        if (snapshot.DiskIo.ReadBytesPerSecond.Status == SampleStatus.Valid &&
+            snapshot.DiskIo.WriteBytesPerSecond.Status == SampleStatus.Valid &&
+            snapshot.DiskIo.ReadsPerSecond.Status == SampleStatus.Valid &&
+            snapshot.DiskIo.WritesPerSecond.Status == SampleStatus.Valid)
+        {
+            valid++;
+        }
+
+        DataQualityText = $"{valid} / {total} 项核心指标有效";
         DataQualityLevel = valid == total
             ? LoadKind.Calm
             : valid == 0 ? LoadKind.Critical : LoadKind.High;
@@ -750,6 +862,8 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
         MemoryIsLive = false;
         DiskStatusText = "刷新延迟";
         DiskIsLive = false;
+        DiskIoStatusText = "刷新延迟";
+        DiskIoIsLive = false;
         DownloadStatusText = "刷新延迟";
         DownloadIsLive = false;
         UploadStatusText = "刷新延迟";
@@ -782,6 +896,13 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
         DiskDetailText = "数据已过期";
         DiskStatusText = "数据已过期";
         DiskIsLive = false;
+
+        DiskReadRateText = "数据已过期";
+        DiskWriteRateText = "数据已过期";
+        DiskReadsIopsText = "数据已过期";
+        DiskWritesIopsText = "数据已过期";
+        DiskIoStatusText = "数据已过期";
+        DiskIoIsLive = false;
 
         DownloadRateValueText = "--";
         DownloadRateUnitText = "B/s";
@@ -872,6 +993,9 @@ public sealed class DashboardViewModel : ViewModelBase, IDisposable
         _disposed = true;
         _timer.Stop();
         _timer.Tick -= OnTimerTick;
+
+        // 释放 PDH 原生查询句柄；Read() 内部有锁，不会与进行中的采样冲突
+        _systemMonitor.Dispose();
     }
 
     private readonly record struct ProcessKey(int Pid, long StartTicks);

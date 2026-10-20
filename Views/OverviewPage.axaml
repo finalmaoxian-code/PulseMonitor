@@ -29,7 +29,7 @@
                                      AccentBrush="{DynamicResource BrushAccent}"
                                      Margin="0,0,4,0">
                     <StackPanel Spacing="6">
-                        <controls:TrendChart Height="36"
+                        <controls:TrendChart Height="32"
                                              MaxSamples="60"
                                              AutoScale="True"
                                              Values="{Binding CpuHistory.Values}"
@@ -49,7 +49,7 @@
                                      AccentBrush="{DynamicResource BrushCyan}"
                                      Margin="4,0,4,0">
                     <StackPanel Spacing="6">
-                        <controls:TrendChart Height="36"
+                        <controls:TrendChart Height="32"
                                              MaxSamples="60"
                                              AutoScale="True"
                                              Values="{Binding MemoryHistory.Values}"
@@ -97,7 +97,7 @@
                                                  Level="{Binding CpuLevel}" />
                         </Grid>
                         <controls:TrendChart Grid.Row="1"
-                                             Height="74"
+                                             Height="68"
                                              Values="{Binding CpuHistory.Values}"
                                              Maximum="100"
                                              LineBrush="{DynamicResource BrushAccent}"
@@ -110,7 +110,7 @@
                                                  Level="{Binding MemoryLevel}" />
                         </Grid>
                         <controls:TrendChart Grid.Row="3"
-                                             Height="74"
+                                             Height="68"
                                              Values="{Binding MemoryHistory.Values}"
                                              Maximum="100"
                                              LineBrush="{DynamicResource BrushCyan}"
@@ -158,55 +158,69 @@
                 </controls:SectionCard>
             </Grid>
 
-            <!-- ===================== 底部：系统状态 ===================== -->
-            <controls:SectionCard Header="系统状态"
-                                  Code="TELEMETRY"
-                                  Hint="{Binding UpdatedAtText, StringFormat='T {0}'}"
-                                  AccentBrush="{DynamicResource BrushGreen}">
-                <StackPanel Spacing="8">
-                    <UniformGrid Columns="4">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="PROCESSES" Classes="eyebrow" />
-                            <TextBlock Text="{Binding ProcessCountText}" Classes="numeric" FontSize="17" />
-                        </StackPanel>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="DOWN TOTAL" Classes="eyebrow" />
-                            <TextBlock Text="{Binding TotalDownloadedText}" Classes="numeric" FontSize="17" />
-                        </StackPanel>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="UP TOTAL" Classes="eyebrow" />
-                            <TextBlock Text="{Binding TotalUploadedText}" Classes="numeric" FontSize="17" />
-                        </StackPanel>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="INTERVAL" Classes="eyebrow" />
-                            <TextBlock Text="{Binding SamplingIntervalText}" Classes="numeric" FontSize="17" />
-                        </StackPanel>
-                    </UniformGrid>
+            <!-- ===================== 磁盘实时 I/O ===================== -->
+            <!--
+                四组读数（读/写速率、读/写 IOPS）走左列紧凑排布，
+                两条曲线并排放在右侧，避免再占一行高度。
+            -->
+            <controls:SectionCard Header="磁盘实时 I/O"
+                                  Code="DISK-IO"
+                                  Hint="PhysicalDisk(_Total)"
+                                  AccentBrush="{DynamicResource BrushAmber}">
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="22">
 
-                    <controls:TickRule Height="10"
-                                       TickCount="100"
-                                       MajorEvery="10"
-                                       MinorLength="3"
-                                       MajorLength="6"
-                                       TickBrush="{DynamicResource BrushGridLineStrong}" />
+                    <Grid Grid.Column="0"
+                          ColumnDefinitions="Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto"
+                          ColumnSpacing="18"
+                          RowSpacing="7"
+                          VerticalAlignment="Center">
 
-                    <UniformGrid Columns="3">
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="COMMIT" Classes="eyebrow" />
-                            <TextBlock Text="{Binding MemoryCommitText}" Classes="numeric" FontSize="14" />
+                        <StackPanel Spacing="3">
+                            <TextBlock Text="READ" Classes="eyebrow" />
+                            <TextBlock Text="{Binding DiskReadRateText}" Classes="numeric" FontSize="14" />
                         </StackPanel>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="SYSTEM CACHE" Classes="eyebrow" />
-                            <TextBlock Text="{Binding MemoryCacheText}" Classes="numeric" FontSize="14" />
+                        <StackPanel Grid.Column="1" Spacing="3">
+                            <TextBlock Text="WRITE" Classes="eyebrow" />
+                            <TextBlock Text="{Binding DiskWriteRateText}" Classes="numeric" FontSize="14" />
                         </StackPanel>
-                        <StackPanel Spacing="4">
-                            <TextBlock Text="DATA QUALITY" Classes="eyebrow" />
-                            <controls:StatusPill HorizontalAlignment="Left"
-                                                 Text="{Binding DataQualityText}"
-                                                 Level="{Binding DataQualityLevel}" />
+                        <StackPanel Grid.Column="2" Spacing="3">
+                            <TextBlock Text="R-IOPS" Classes="eyebrow" />
+                            <TextBlock Text="{Binding DiskReadsIopsText}" Classes="numeric" FontSize="14" />
                         </StackPanel>
-                    </UniformGrid>
-                </StackPanel>
+                        <StackPanel Grid.Column="3" Spacing="3">
+                            <TextBlock Text="W-IOPS" Classes="eyebrow" />
+                            <TextBlock Text="{Binding DiskWritesIopsText}" Classes="numeric" FontSize="14" />
+                        </StackPanel>
+
+                        <controls:StatusPill Grid.Row="1" Grid.ColumnSpan="4"
+                                             HorizontalAlignment="Left"
+                                             Text="{Binding DiskIoStatusText}"
+                                             IsLive="{Binding DiskIoIsLive}" />
+                    </Grid>
+
+                    <Grid Grid.Column="1" ColumnDefinitions="*,*" ColumnSpacing="14">
+                        <StackPanel Grid.Column="0" Spacing="5">
+                            <TextBlock Text="READ / MiB/s" Classes="eyebrow" />
+                            <controls:TrendChart Height="40"
+                                                 AutoScale="True"
+                                                 MaxSamples="60"
+                                                 Values="{Binding DiskReadHistory.Values}"
+                                                 LineBrush="{DynamicResource BrushGreen}"
+                                                 GridBrush="{DynamicResource BrushGridLine}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="5">
+                            <TextBlock Text="WRITE / MiB/s" Classes="eyebrow" />
+                            <controls:TrendChart Height="40"
+                                                 AutoScale="True"
+                                                 MaxSamples="60"
+                                                 Values="{Binding DiskWriteHistory.Values}"
+                                                 LineBrush="{DynamicResource BrushAmber}"
+                                                 GridBrush="{DynamicResource BrushGridLine}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
             </controls:SectionCard>
         </StackPanel>
     </ScrollViewer>

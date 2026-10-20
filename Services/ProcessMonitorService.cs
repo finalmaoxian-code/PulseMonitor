@@ -14,6 +14,12 @@ public sealed class ProcessMonitorService
 {
     private Dictionary<ProcessKey, CpuBaseline> _previous = [];
 
+    /// <summary>
+    /// 可执行路径缓存。读取 MainModule 需要打开模块并做一次文件系统访问，
+    /// 而同一进程（PID + 启动时间）在生命周期内路径不变，因此只需读一次。
+    /// </summary>
+    private readonly Dictionary<ProcessKey, string?> _pathCache = [];
+
     public IReadOnlyList<ProcessSnapshot> Read()
     {
         DateTimeOffset timestamp = DateTimeOffset.UtcNow;
@@ -104,14 +110,8 @@ public sealed class ProcessMonitorService
                     // 权限不足时保持 0，并由 HandlesText 显示 N/A。
                 }
 
-                try
-                {
-                    executablePath = process.MainModule?.FileName;
-                }
-                catch (Exception ex) when (IsRecoverableProcessException(ex))
-                {
-                    // 路径不是核心指标，读取失败不影响进程行展示。
-                }
+                var key = new ProcessKey(pid, startTicks);
+                executablePath = LookupPath(process, key, startTimeUtc);
 
                 MetricSample<double> cpu = ReadCpu(
                     process,
@@ -142,11 +142,51 @@ public sealed class ProcessMonitorService
 
         _previous = current;
 
+        // 进程已退出时清掉路径缓存，避免长期运行后缓存无限增长
+        foreach (ProcessKey stale in _pathCache.Keys.Where(key => !current.ContainsKey(key)).ToArray())
+        {
+            _pathCache.Remove(stale);
+        }
+
         return results
             .OrderByDescending(process => process.CpuUsagePercent.Status == SampleStatus.Valid)
             .ThenByDescending(process => process.CpuUsagePercent.Value)
             .ThenByDescending(process => process.WorkingSetBytes)
             .ToArray();
+    }
+
+    /// <summary>
+    /// 按进程身份缓存可执行路径。启动时间不可用时不做缓存
+    /// （无法安全校验 PID 是否被复用）。
+    /// </summary>
+    private string? LookupPath(Process process, ProcessKey key, DateTimeOffset? startTimeUtc)
+    {
+        if (startTimeUtc is null)
+        {
+            return TryReadPath(process);
+        }
+
+        if (_pathCache.TryGetValue(key, out string? cached))
+        {
+            return cached;
+        }
+
+        string? path = TryReadPath(process);
+        _pathCache[key] = path;
+        return path;
+    }
+
+    private static string? TryReadPath(Process process)
+    {
+        try
+        {
+            return process.MainModule?.FileName;
+        }
+        catch (Exception ex) when (IsRecoverableProcessException(ex))
+        {
+            // 路径不是核心指标，读取失败不影响进程行展示。
+            return null;
+        }
     }
 
     private MetricSample<double> ReadCpu(
