@@ -14,5 +14,7 @@ public sealed record SystemSnapshot
     public DiskSnapshot SystemDisk { get; init; } = new();
 
     public NetworkSnapshot Network { get; init; } = new();
+
+    public DiskIoSnapshot DiskIo { get; init; } = new();
 }
 

@@ -56,6 +56,27 @@
                         <TextBlock Text="{Binding Dashboard.ProcessCountText}" Classes="numeric" FontSize="15" />
                     </StackPanel>
                 </StackPanel>
+
+                <!-- 内存与数据质量：原先放在总览页底部，为磁盘 I/O 面板让出空间后移到这里 -->
+                <TextBlock Text="MEMORY" Classes="eyebrow" Margin="0,10,0,0" />
+                <Rectangle Height="1" Fill="{DynamicResource BrushBorder}" />
+
+                <StackPanel Spacing="8" Margin="0,2,0,0">
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="COMMIT" Classes="eyebrow" />
+                        <TextBlock Text="{Binding Dashboard.MemoryCommitText}" Classes="numeric" FontSize="13" />
+                    </StackPanel>
+                    <StackPanel Spacing="3">
+                        <TextBlock Text="SYSTEM CACHE" Classes="eyebrow" />
+                        <TextBlock Text="{Binding Dashboard.MemoryCacheText}" Classes="numeric" FontSize="13" />
+                    </StackPanel>
+                    <StackPanel Spacing="5">
+                        <TextBlock Text="DATA QUALITY" Classes="eyebrow" />
+                        <controls:StatusPill HorizontalAlignment="Left"
+                                             Text="{Binding Dashboard.DataQualityText}"
+                                             Level="{Binding Dashboard.DataQualityLevel}" />
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
 
             <!-- ===================== 底部遥测 ===================== -->

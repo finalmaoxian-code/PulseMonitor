@@ -15,7 +15,8 @@ namespace PulseMonitor.Controls;
 ///   ControlTheme 里再用样式选择器 <c>^.high</c> 挑颜色 ——
 ///   于是"语义 → 颜色"的映射完全留在皮肤文件里，C# 没有一处硬编码颜色，
 ///   明暗主题也能各自取到自己的画刷。
-/// · IsLive 为 true 时，模板里的光晕会播放无限循环的透明度动画（纯 XAML）。
+/// · IsLive 表示"当前是否有有效读数"：false 时指示灯变暗（纯静态样式，不产生动画）。
+/// · Pulse 控制是否播放呼吸动画，默认关闭，避免长期重绘。
 /// </summary>
 public class StatusPill : TemplatedControl
 {
@@ -26,6 +27,10 @@ public class StatusPill : TemplatedControl
     /// <summary>色点的兜底画刷（保持这个属性，方便脱离 Level 独立使用）。</summary>
     public static readonly StyledProperty<IBrush?> AccentBrushProperty =
         AvaloniaProperty.Register<StatusPill, IBrush?>(nameof(AccentBrush));
+
+    /// <summary>当前是否有有效读数。false 时指示灯变暗，便于区分"有值"和"无值"。</summary>
+    public static readonly StyledProperty<bool> IsLiveProperty =
+        AvaloniaProperty.Register<StatusPill, bool>(nameof(IsLive), true);
 
     /// <summary>
     /// 是否播放呼吸动画。默认关闭：动画会持续请求重绘，
@@ -66,6 +71,12 @@ public class StatusPill : TemplatedControl
     {
         get => GetValue(AccentBrushProperty);
         set => SetValue(AccentBrushProperty, value);
+    }
+
+    public bool IsLive
+    {
+        get => GetValue(IsLiveProperty);
+        set => SetValue(IsLiveProperty, value);
     }
 
     public bool Pulse

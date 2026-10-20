@@ -39,6 +39,15 @@ public sealed record NetworkSnapshot
 
     public long SessionUploadedBytes { get; init; }
 
+    /// <summary>计入汇总的网卡数量（虚拟/VPN 网卡按规则排除）。</summary>
+    public int IncludedAdapterCount { get; init; }
+
+    /// <summary>下载汇总实际贡献了有效读数的网卡数量。</summary>
+    public int DownloadContributingCount { get; init; }
+
+    /// <summary>上传汇总实际贡献了有效读数的网卡数量。</summary>
+    public int UploadContributingCount { get; init; }
+
     public IReadOnlyList<NetworkAdapterSnapshot> Adapters { get; init; } = [];
 }
 

@@ -14,7 +14,7 @@ namespace PulseMonitor.Services;
 /// Windows 系统指标采集服务。
 /// 所有速率都基于实际单调时钟间隔；单项采集失败只影响该项，并返回明确状态。
 /// </summary>
-public sealed class SystemMonitorService
+public sealed class SystemMonitorService : IDisposable
 {
     private static readonly string[] VirtualAdapterKeywords =
     [
@@ -24,7 +24,8 @@ public sealed class SystemMonitorService
     ];
 
     private readonly object _sync = new();
-    private static readonly CpuUsageSampler SharedCpuSampler = new();
+    private readonly CpuUsageSampler _cpuSampler = new();
+    private readonly DiskIoMonitorService _diskIoMonitor = new();
     private readonly Dictionary<string, AdapterRateState> _networkStates = new(StringComparer.Ordinal);
     private readonly DriveInfo _systemDrive;
 
@@ -54,7 +55,7 @@ public sealed class SystemMonitorService
         {
             DateTimeOffset timestamp = DateTimeOffset.UtcNow;
 
-            MetricSample<double> cpu = SharedCpuSampler.Take(timestamp);
+            MetricSample<double> cpu = _cpuSampler.Take(timestamp);
             MemorySnapshot memory = ReadMemory(timestamp);
             DiskSnapshot disk = ReadDisk(timestamp);
             NetworkSnapshot network = ReadNetwork(timestamp);
@@ -65,6 +66,7 @@ public sealed class SystemMonitorService
                 CpuUsagePercent = cpu,
                 Memory = memory,
                 SystemDisk = disk,
+                DiskIo = _diskIoMonitor.Read(timestamp),
                 Network = network,
             };
         }
@@ -249,8 +251,18 @@ public sealed class SystemMonitorService
         }
 
         var selected = candidates.Where(candidate => candidate.IncludedInAggregate).ToArray();
-        RateSample aggregateDownload = Aggregate(selected, static candidate => candidate.Download, timestamp, "下载");
-        RateSample aggregateUpload = Aggregate(selected, static candidate => candidate.Upload, timestamp, "上传");
+        RateSample aggregateDownload = Aggregate(
+            selected,
+            static candidate => candidate.Download,
+            timestamp,
+            "下载",
+            out int downloadContributors);
+        RateSample aggregateUpload = Aggregate(
+            selected,
+            static candidate => candidate.Upload,
+            timestamp,
+            "上传",
+            out int uploadContributors);
 
         if (aggregateDownload.Status == SampleStatus.Valid)
         {
@@ -287,6 +299,9 @@ public sealed class SystemMonitorService
             SessionDownloadedBytes = _sessionDownloadedBytes,
             SessionUploadedBytes = _sessionUploadedBytes,
             Adapters = adapters,
+            IncludedAdapterCount = selected.Length,
+            DownloadContributingCount = downloadContributors,
+            UploadContributingCount = uploadContributors,
         };
     }
 
@@ -301,22 +316,31 @@ public sealed class SystemMonitorService
         return state;
     }
 
+    /// <summary>
+    /// 汇总已选网卡。单块网卡不可用时不再让整体速率失效：
+    /// 只累加采样有效的网卡，并通过 contributingCount 告知调用方统计是否完整。
+    /// </summary>
     private static RateSample Aggregate(
         IReadOnlyList<AdapterCandidate> selected,
         Func<AdapterCandidate, RateSample> selector,
         DateTimeOffset timestamp,
-        string direction)
+        string direction,
+        out int contributingCount)
     {
+        contributingCount = 0;
+
         if (selected.Count == 0)
         {
             return new RateSample(null, null, SampleStatus.Unavailable, timestamp, "没有活动网络适配器");
         }
 
         var samples = selected.Select(selector).ToArray();
-        SampleStatus status = CombineStatus(samples.Select(sample => sample.Status));
+        var usable = samples.Where(sample => sample.Status == SampleStatus.Valid).ToArray();
+        contributingCount = usable.Length;
 
-        if (status != SampleStatus.Valid)
+        if (usable.Length == 0)
         {
+            SampleStatus status = CombineStatus(samples.Select(sample => sample.Status));
             string detail = string.Join(
                 "；",
                 samples.Where(sample => sample.Status != SampleStatus.Valid)
@@ -331,8 +355,8 @@ public sealed class SystemMonitorService
                 string.IsNullOrWhiteSpace(detail) ? $"{direction}速率尚未就绪" : detail);
         }
 
-        double rate = samples.Sum(sample => sample.PerSecond ?? 0d);
-        long delta = samples.Sum(sample => sample.Delta ?? 0L);
+        double rate = usable.Sum(sample => sample.PerSecond ?? 0d);
+        long delta = usable.Sum(sample => sample.Delta ?? 0L);
         return new RateSample(rate, delta, SampleStatus.Valid, timestamp);
     }
 
@@ -453,6 +477,18 @@ public sealed class SystemMonitorService
         public RateSample Download { get; } = download;
         public RateSample Upload { get; } = upload;
         public bool IncludedInAggregate { get; set; }
+    }
+
+    /// <summary>
+    /// 释放 PDH 查询句柄。Read() 已用 _sync 串行保护采集，
+    /// 这里加同样的锁避免句柄在采样进行中被关闭。
+    /// </summary>
+    public void Dispose()
+    {
+        lock (_sync)
+        {
+            _diskIoMonitor.Dispose();
+        }
     }
 
     [StructLayout(LayoutKind.Sequential)]
